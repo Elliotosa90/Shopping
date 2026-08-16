@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShopHub — Deals That Wow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<style>
+:root{--p:#ff5c00;--p2:#ff2d78;--a:#ffb800;--ink:#241a2e;--mut:#8a8299;--bg:#f5f3fa;--card:#fff;--r:16px;--grad:linear-gradient(90deg,#ff5c00,#ff2d78)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+button{font-family:inherit;cursor:pointer;border:none}
+input,select,textarea{font-family:inherit;font-size:14px;padding:11px 13px;border:1.5px solid #e4dfef;border-radius:10px;outline:none;width:100%;background:#fff}
+input:focus{border-color:var(--p)}
+.hidden{display:none!important}
+header{position:sticky;top:0;z-index:50;background:#fff;box-shadow:0 2px 14px rgba(36,26,46,.08)}
+.topbar{max-width:1200px;margin:auto;display:flex;align-items:center;gap:18px;padding:13px 16px}
+.logo{font-weight:900;font-size:26px;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;letter-spacing:-.5px}
+.search{flex:1;display:flex;max-width:560px}
+.search input{flex:1;border-radius:24px 0 0 24px;border:2px solid var(--p);border-right:none;padding:11px 18px}
+.search button{background:var(--grad);color:#fff;border-radius:0 24px 24px 0;padding:0 22px;font-weight:700}
+.cartbtn{position:relative;background:var(--grad);color:#fff;border-radius:14px;padding:11px 16px;font-weight:700;display:flex;align-items:center;gap:8px}
+#cartBadge{position:absolute;top:-8px;right:-8px;background:#7c3aed;color:#fff;font-size:12px;font-weight:800;min-width:22px;height:22px;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.hero{background:linear-gradient(120deg,#ff5c00,#ff2d78 55%,#7c3aed);color:#fff;padding:44px 16px;text-align:center}
+.hero h1{font-size:clamp(28px,5vw,48px);font-weight:900;line-height:1.15;text-shadow:0 3px 12px rgba(0,0,0,.25)}
+.hero p{margin-top:10px;font-size:17px;opacity:.95}
+.hero .cta{display:inline-block;margin-top:20px;background:#fff;color:var(--p2);font-weight:800;padding:13px 30px;border-radius:30px;font-size:15px;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.flash{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:18px;font-weight:700}
+.flash .timer{background:rgba(255,255,255,.22);padding:7px 14px;border-radius:12px;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.cats{max-width:1200px;margin:24px auto 4px;padding:0 16px;display:flex;gap:10px;flex-wrap:wrap}
+.chip{padding:9px 18px;border-radius:24px;background:#fff;font-weight:600;font-size:14px;box-shadow:0 2px 8px rgba(36,26,46,.08);border:2px solid transparent}
+.chip.on{background:var(--grad);color:#fff}
+main{max-width:1200px;margin:20px auto 60px;padding:0 16px}
+.sec{display:flex;align-items:center;gap:12px;margin:26px 0 14px}
+.sec h2{font-size:22px;font-weight:800}
+.sec .tag{background:var(--grad);color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px}
+.pcard{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:0 4px 14px rgba(36,26,46,.09);transition:.2s;display:flex;flex-direction:column}
+.pcard:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(255,92,0,.22)}
+.pimg{position:relative;aspect-ratio:1;background:#f0edf7;overflow:hidden}
+.pimg img{width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;top:10px;left:10px;background:#ff2d55;color:#fff;font-weight:800;font-size:12px;padding:4px 10px;border-radius:10px;box-shadow:0 3px 8px rgba(255,45,85,.4)}
+.badge.hot{background:#7c3aed}
+.pbody{padding:13px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pbody h3{font-size:14px;font-weight:600;line-height:1.35;min-height:38px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stars{color:var(--a);font-size:13px}
+.stars span{color:var(--mut);font-size:12px;margin-left:4px}
+.price{display:flex;align-items:baseline;gap:8px}
+.price b{color:var(--p);font-size:19px;font-weight:800}
+.price s{color:var(--mut);font-size:13px}
+.sold{font-size:11px;color:var(--mut)}
+.bar{height:6px;background:#eee7f8;border-radius:4px;overflow:hidden;margin:3px 0}
+.bar i{display:block;height:100%;background:var(--grad)}
+.add{margin-top:auto;background:var(--grad);color:#fff;font-weight:700;padding:11px;border-radius:12px;font-size:14px}
+.add:disabled{background:#c9c2d8;cursor:not-allowed}
+.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:60px 0;font-size:16px}
+footer{background:#1f0a3a;color:#cfc3e8;padding:44px 16px;margin-top:40px}
+.fwrap{max-width:1200px;margin:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px}
+footer h4{color:#fff;margin-bottom:10px;font-size:15px}
+footer p,footer a{font-size:13.5px;line-height:1.9;color:#cfc3e8;text-decoration:none}
+footer a:hover{color:var(--a)}
+.overlay{position:fixed;inset:0;background:rgba(20,8,40,.55);z-index:90;opacity:0;pointer-events:none;transition:.25s}
+.overlay.show{opacity:1;pointer-events:auto}
+#cartDrawer{position:fixed;top:0;right:-420px;width:min(400px,92vw);height:100%;background:#fff;z-index:95;transition:.3s;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(0,0,0,.2)}
+#cartDrawer.open{right:0}
+.dhead{display:flex;justify-content:space-between;align-items:center;padding:18px;border-bottom:1px solid #f0ecf7;font-weight:800;font-size:17px}
+.x{background:#f3f0f9;border-radius:10px;width:36px;height:36px;font-size:18px;color:var(--ink)}
+.citems{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.citem{display:flex;gap:12px;background:#faf8fd;border-radius:12px;padding:10px}
+.citem img{width:64px;height:64px;border-radius:10px;object-fit:cover}
+.citem .ci{flex:1}
+.citem .nm{font-size:13px;font-weight:600;line-height:1.3}
+.citem .pr{color:var(--p);font-weight:800;font-size:14px;margin-top:3px}
+.qty{display:flex;align-items:center;gap:8px;margin-top:6px}
+.qty button{width:26px;height:26px;border-radius:8px;background:#fff;border:1.5px solid #e4dfef;font-weight:800}
+.qty b{min-width:20px;text-align:center;font-size:14px}
+.dfoot{border-top:1px solid #f0ecf7;padding:16px 18px;background:#fff}
+.row{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);margin:4px 0}
+.row b{color:var(--ink);font-size:17px}
+.bigbtn{display:block;width:100%;background:var(--grad);color:#fff;font-weight:800;font-size:15px;padding:14px;border-radius:14px;margin-top:10px}
+.ghost{background:#f3f0f9;color:var(--ink);font-weight:600;padding:11px 16px;border-radius:12px}
+.modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(20,8,40,.6);padding:16px}
+.modal.show{display:flex}
+.mcard{background:#fff;border-radius:20px;width:min(560px,100%);max-height:92vh;overflow-y:auto;padding:24px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.mhead h2{font-size:20px;font-weight:800}
+.steps{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--mut);margin-bottom:16px}
+.steps .on{color:var(--p)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mcard label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin:10px 0 4px}
+.mcard h3{font-size:15px;margin:18px 0 10px;font-weight:800}
+.payopts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.payopt{border:2px solid #e4dfef;border-radius:14px;padding:14px 8px;text-align:center;background:#faf8fd;transition:.15s}
+.payopt .ic{font-size:26px}
+.payopt .lb{font-size:12.5px;font-weight:700;margin-top:6px;display:block}
+.payopt.on{border-color:var(--p);background:#fff4ec;box-shadow:0 0 0 3px rgba(255,92,0,.15)}
+.subopts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.subopt{border:1.5px solid #e4dfef;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:600;background:#fff}
+.subopt.on{border-color:var(--p2);background:#fff0f5;color:var(--p2)}
+.walletbox{background:#faf8fd;border:1.5px dashed #d9d0ea;border-radius:14px;padding:14px;margin-top:12px;word-break:break-all}
+.walletbox .wn{font-weight:800;font-size:14px;color:var(--p2)}
+.walletbox .wa{font-size:13px;color:var(--ink);margin:6px 0}
+.cpbtn{background:var(--grad);color:#fff;font-weight:700;padding:8px 16px;border-radius:10px;font-size:13px}
+.note{background:#fff8e1;border:1px solid #ffd977;border-radius:12px;padding:11px 14px;font-size:13px;color:#7a5b00;margin-top:12px;line-height:1.6}
+.successwrap{text-align:center;padding:10px 0}
+.check{width:84px;height:84px;border-radius:50%;background:var(--grad);color:#fff;font-size:42px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 12px 30px rgba(255,92,0,.4)}
+.tn{background:#faf8fd;border:2px dashed #d9d0ea;border-radius:14px;padding:14px;font-size:19px;font-weight:800;letter-spacing:1px;color:var(--p2);margin:14px 0;word-break:break-all}
+.smallnote{font-size:12.5px;color:var(--mut);line-height:1.7;margin-top:12px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:13px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:200;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+@media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr}.payopts{grid-template-columns:1fr}.search{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <div class="logo">🛍️ ShopHub</div>
+    <div class="search"><input id="q" placeholder="Search deals, e.g. earbuds, shoes…" oninput="renderProducts()"><button>Search</button></div>
+    <button class="cartbtn" onclick="toggleCart(true)">🛒 Cart <span id="cartBadge">0</span></button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>MEGA SALE!<br>Up to 70% OFF Everything 🔥</h1>
+  <p>Crazy prices. Fast delivery. Real tracking.</p>
+  <div class="flash">⚡ Flash deals end in <span class="timer" id="timer">--:--:--</span></div>
+  <a class="cta" href="#deals">Shop Now ↓</a>
+</div>
+
+<div class="cats" id="cats"></div>
+
+<main>
+  <div class="sec" id="deals"><h2>🔥 Hot Deals</h2><span class="tag">LIVE</span></div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <div class="fwrap">
+    <div>
+      <h4>🛍️ ShopHub</h4>
+      <p>Your one-stop colorful marketplace.<br>Pay with crypto, gift cards or card.</p>
+    </div>
+    <div>
+      <h4>Contact Us</h4>
+      <div id="contactInfo"><p>Loading…</p></div>
+    </div>
+    <div>
+      <h4>Quick Links</h4>
+      <p><a href="track.html">Track your order</a><br><a href="admin.html">Admin panel</a></p>
+    </div>
+  </div>
+</footer>
+
+<!-- Cart drawer -->
+<div class="overlay" id="cartOverlay" onclick="toggleCart(false)"></div>
+<aside id="cartDrawer">
+  <div class="dhead"><span>🛒 Your Cart</span><button class="x" onclick="toggleCart(false)">✕</button></div>
+  <div class="citems" id="cartItems"></div>
+  <div class="dfoot">
+    <div class="row"><span>Subtotal</span><b id="subT">$0.00</b></div>
+    <div class="row"><span>Shipping</span><b id="shipT">$0.00</b></div>
+    <div class="row"><span>Total</span><b id="totT">$0.00</b></div>
+    <button class="bigbtn" onclick="openCheckout()">Checkout →</button>
+  </div>
+</aside>
+
+<!-- Checkout modal -->
+<div class="modal" id="checkoutModal">
+  <div class="mcard">
+    <div class="mhead"><h2>Checkout</h2><button class="x" onclick="closeCheckout()">✕</button></div>
+    <div class="steps"><span id="stp1" class="on">1 · Delivery Address</span> → <span id="stp2">2 · Payment</span></div>
+
+    <div id="step1">
+      <h3>📦 Delivery Details</h3>
+      <div class="grid2">
+        <div><label>Full Name *</label><input id="cName" placeholder="Jane Doe"></div>
+        <div><label>Email *</label><input id="cEmail" placeholder="jane@mail.com"></div>
+      </div>
+      <div><label>Phone Number *</label><input id="cPhone" placeholder="+1 555 000 1234"></div>
+      <div><label>Street Address *</label><input id="cStreet" placeholder="12 Market Road, Apt 4"></div>
+      <div class="grid3">
+        <div><label>City *</label><input id="cCity" placeholder="Lagos"></div>
+        <div><label>State *</label><input id="cState" placeholder="LA"></div>
+        <div><label>Zip *</label><input id="cZip" placeholder="100001"></div>
+      </div>
+      <div><label>Country *</label><input id="cCountry" placeholder="Nigeria"></div>
+
+      <h3>💳 Choose Payment Method</h3>
+      <div class="payopts" id="payOptions"></div>
+      <div id="paySub"></div>
+
+      <button class="bigbtn" id="placeBtn" onclick="placeOrder()">Place Order & Pay ▶</button>
+    </div>
+
+    <div id="step2" class="hidden">
+      <div id="payUI"></div>
+      <button class="ghost" style="margin-top:14px" onclick="backToStep1()">← Change details</button>
+    </div>
+  </div>
+</div>
+
+<!-- Success modal -->
+<div class="modal" id="successModal">
+  <div class="mcard">
+    <div class="successwrap">
+      <div class="check">✓</div>
+      <h2 style="font-size:22px">Order Placed! 🎉</h2>
+      <p style="color:var(--mut);font-size:14px;margin-top:6px">Payment received. Your tracking number:</p>
+      <div class="tn" id="successTN">TRK-XXXX</div>
+      <button class="cpbtn" onclick="copyTN()">📋 Copy Tracking Number</button>
+      <button class="bigbtn" style="margin-top:12px" onclick="location.href='track.html?tn='+encodeURIComponent(trackTN)">Track My Order →</button>
+      <button class="ghost" style="margin-top:10px;width:100%" onclick="closeSuccess()">Continue Shopping</button>
+      <p class="smallnote">We saved your order. The seller will create your shipment shortly — keep your tracking number safe!</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   🔥 FIREBASE CONFIG — REPLACE WITH YOUR PROJECT'S CONFIG
+   Firebase Console → Project Settings → Your apps → SDK setup
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const db = firebase.initializeApp(firebaseConfig).database();
+let products = {}, settings = {contact:{}, shippingFee:0, currency:'$', paystack:{publicKey:''}};
+let wallets = {}, giftCards = {}, selectedPay = null, pendingOrderKey = null, trackTN = '';
+let cart = JSON.parse(localStorage.getItem('sh_cart') || '[]');
+let currentCat = 'all';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => settings.currency + ' ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2800); };
+
+/* ---------- Firebase init + seeding ---------- */
+function init(){
+  db.ref('settings').once('value', s => {
+    if(!s.exists()) db.ref('settings').set({
+      contact:{address:'12 Market Street, Ikeja, Lagos', email:'support@shophub.com', phone:'+234 800 000 0000'},
+      shippingFee:0, currency:'$', paystack:{publicKey:'', secretKey:'', currency:'NGN'}, adminPass:'admin123'
+    });
+  });
+  db.ref('payments/wallets').once('value', s => {
+    if(!s.exists()) db.ref('payments/wallets').set({
+      btc:{name:'Bitcoin (BTC)', network:'Bitcoin', address:'bc1qshophubdemoexample123456789'},
+      usdt:{name:'USDT (TRC20)', network:'Tron TRC20', address:'TShophubdemoexample123456789abc'},
+      eth:{name:'Ethereum (ETH)', network:'ERC20', address:'0xShophubDemoExampleAddress0001'}
+    });
+  });
+  db.ref('payments/giftCards').once('value', s => {
+    if(!s.exists()) db.ref('payments/giftCards').set({
+      itunes:{name:'USA iTunes Gift Card', instructions:'Scratch the back to reveal the 16-digit code, enter it below. We redeem it instantly to confirm your payment.'},
+      amazon:{name:'Amazon US Gift Card', instructions:'Enter the claim code (starts with GC-XXXX-XXXX-XXXX). We verify and apply it to your order.'}
+    });
+  });
+  db.ref('settings').on('value', s => { settings = Object.assign(settings, s.val()||{}); renderContact(); });
+  db.ref('products').on('value', s => {
+    products = s.val() || {};
+    if(!Object.keys(products).length) seedProducts();
+    renderCats(); renderProducts();
+  });
+  db.ref('payments/wallets').on('value', s => { wallets = s.val()||{}; });
+  db.ref('payments/giftCards').on('value', s => { giftCards = s.val()||{}; });
+  renderCart(); startTimer();
+}
+
+function seedProducts(){
+  const demos = [
+    {name:'Wireless Earbuds Pro ANC', price:19.99, oldPrice:49.99, category:'Electronics', stock:120, sold:87, rating:4.7, img:'https://picsum.photos/seed/earbuds/400/400', desc:'Deep bass, 30h battery'},
+    {name:'Smart Watch Series X', price:29.99, oldPrice:79.99, category:'Electronics', stock:64, sold:74, rating:4.5, img:'https://picsum.photos/seed/watch/400/400', desc:'AMOLED, heart-rate, GPS'},
+    {name:'Men\'s Street Sneakers', price:24.99, oldPrice:59.99, category:'Fashion', stock:80, sold:91, rating:4.6, img:'https://picsum.photos/seed/shoes/400/400', desc:'Ultra-light comfort'},
+    {name:'Oversized Hoodie (Unisex)', price:21.99, oldPrice:45.99, category:'Fashion', stock:95, sold:68, rating:4.4, img:'https://picsum.photos/seed/hoodie/400/400', desc:'Cozy fleece, many colors'},
+    {name:'Air Fryer 5L Digital', price:39.99, oldPrice:89.99, category:'Home & Kitchen', stock:30, sold:58, rating:4.8, img:'https://picsum.photos/seed/airfryer/400/400', desc:'Oil-free cooking, 8 presets'},
+    {name:'LED Strip Lights 10m', price:9.99, oldPrice:24.99, category:'Home & Kitchen', stock:200, sold:93, rating:4.3, img:'https://picsum.photos/seed/led/400/400', desc:'RGB, app + remote control'},
+    {name:'Vitamin C Glow Serum', price:12.99, oldPrice:29.99, category:'Beauty', stock:150, sold:82, rating:4.6, img:'https://picsum.photos/seed/serum/400/400', desc:'Brightening, 20% vitamin C'},
+    {name:'Mini Drone 4K Camera', price:49.99, oldPrice:119.99, category:'Electronics', stock:22, sold:55, rating:4.7, img:'https://picsum.photos/seed/drone/400/400', desc:'Foldable, 25min flight'},
+    {name:'Bluetooth Speaker Boom', price:15.99, oldPrice:39.99, category:'Electronics', stock:110, sold:77, rating:4.5, img:'https://picsum.photos/seed/speaker/400/400', desc:'IPX7 waterproof, 24h play'},
+    {name:'Laptop Backpack 15.6"', price:18.99, oldPrice:42.99, category:'Fashion', stock:88, sold:64, rating:4.4, img:'https://picsum.photos/seed/backpack/400/400', desc:'USB port, anti-theft'}
+  ];
+  demos.forEach(p => db.ref('products').push(p));
+  toast('🌱 Demo products seeded — manage them in admin.html');
+}
+
+/* ---------- Render ---------- */
+function renderCats(){
+  const cats = ['all', ...new Set(Object.values(products).map(p=>p.category).filter(Boolean))];
+  $('cats').innerHTML = cats.map(c => `<button class="chip ${c===currentCat?'on':''}" onclick="currentCat='${esc(c)}';renderCats();renderProducts()">${esc(c)}</button>`).join('');
+}
+function renderProducts(){
+  const q = ($('q').value||'').toLowerCase();
+  const list = Object.entries(products).filter(([id,p]) =>
+    (currentCat==='all' || p.category===currentCat) &&
+    (!q || (p.name||'').toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q)));
+  if(!list.length){ $('grid').innerHTML = '<div class="empty">😢 Nothing here yet — check back soon!</div>'; return; }
+  $('grid').innerHTML = list.map(([id,p]) => {
+    const off = p.oldPrice ? Math.round((1 - p.price/p.oldPrice)*100) : 0;
+    const soldOut = Number(p.stock) <= 0;
+    return `<div class="pcard">
+      <div class="pimg"><img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22><rect width=%22400%22 height=%22400%22 fill=%22%23f0edf7%22/><text x=%2250%25%22 y=%2250%25%22 font-size=%2260%22 text-anchor=%22middle%22>🛍️</text></svg>'">
+      ${off? `<span class="badge ${off>=50?'hot':''}">-${off}%</span>`:''}
+      ${soldOut? '<span class="badge" style="background:#555">SOLD OUT</span>':''}</div>
+      <div class="pbody">
+        <h3>${esc(p.name)}</h3>
+        <div class="stars">${'★'.repeat(Math.round(p.rating||4))}${'☆'.repeat(5-Math.round(p.rating||4))}<span>${p.rating||'4.0'}</span></div>
+        <div class="price"><b>${fmt(p.price)}</b>${p.oldPrice? `<s>${fmt(p.oldPrice)}</s>`:''}</div>
+        ${p.sold? `<div class="sold"><div class="bar"><i style="width:${Math.min(100,p.sold)}%"></i></div>${p.sold}% sold</div>`:''}
+        <button class="add" ${soldOut?'disabled':''} onclick="addToCart('${id}')">${soldOut?'Sold Out':'Add to Cart 🛒'}</button>
+      </div></div>`;
+  }).join('');
+}
+function renderContact(){
+  const c = settings.contact||{};
+  $('contactInfo').innerHTML = `<p>📍 ${esc(c.address||'—')}<br>📧 ${esc(c.email||'—')}<br>📞 ${esc(c.phone||'—')}</p>`;
+}
+
+/* ---------- Cart ---------- */
+function toggleCart(open){ $('cartOverlay').classList.toggle('show', open); $('cartDrawer').classList.toggle('open', open); }
+function addToCart(id){
+  const it = cart.find(c=>c.id===id);
+  if(it) it.qty++; else cart.push({id, qty:1});
+  saveCart(); toast('🛒 Added to cart!');
+}
+function chgQty(id, d){
+  const it = cart.find(c=>c.id===id); if(!it) return;
+  it.qty += d; if(it.qty<=0) cart = cart.filter(c=>c.id!==id);
+  saveCart();
+}
+function saveCart(){ localStorage.setItem('sh_cart', JSON.stringify(cart)); renderCart(); }
+function cartTotals(){
+  const sub = cart.reduce((t,c)=>{ const p=products[c.id]; return t + (p? p.price*c.qty : 0); }, 0);
+  const ship = cart.length ? Number(settings.shippingFee||0) : 0;
+  return {sub, ship, total: sub+ship};
+}
+function renderCart(){
+  const n = cart.reduce((t,c)=>t+c.qty,0);
+  $('cartBadge').textContent = n;
+  if(!cart.length){ $('cartItems').innerHTML = '<div style="text-align:center;color:var(--mut);margin-top:40px">🛒 Cart is empty<br><small>Add some deals!</small></div>'; }
+  else $('cartItems').innerHTML = cart.map(c=>{
+    const p = products[c.id]; if(!p) return '';
+    return `<div class="citem"><img src="${esc(p.img)}" onerror="this.style.visibility='hidden'">
+      <div class="ci"><div class="nm">${esc(p.name)}</div>
+      <div class="pr">${fmt(p.price)}</div>
+      <div class="qty"><button onclick="chgQty('${c.id}',-1)">−</button><b>${c.qty}</b><button onclick="chgQty('${c.id}',1)">+</button></div></div></div>`;
+  }).join('');
+  const t = cartTotals();
+  $('subT').textContent = fmt(t.sub); $('shipT').textContent = fmt(t.ship); $('totT').textContent = fmt(t.total);
+}
+
+/* ---------- Checkout ---------- */
+function openCheckout(){
+  if(!cart.length) return toast('Your cart is empty!');
+  toggleCart(false); renderPayOptions();
+  $('checkoutModal').classList.add('show'); showStep(1);
+}
+function closeCheckout(){ $('checkoutModal').classList.remove('show'); }
+function showStep(n){
+  $('step1').classList.toggle('hidden', n!==1);
+  $('step2').classList.toggle('hidden', n!==2);
+  $('stp1').classList.toggle('on', n===1); $('stp2').classList.toggle('on', n===2);
+}
+function backToStep1(){ showStep(1); }
+
+function renderPayOptions(){
+  const hasCrypto = Object.keys(wallets).length, hasGC = Object.keys(giftCards).length, hasPS = !!settings.paystack.publicKey;
+  let html = '';
+  if(hasCrypto) html += `<button class="payopt ${selectedPay&&selectedPay.method==='crypto'?'on':''}" onclick="pickMethod('crypto')"><span class="ic">💎</span><span class="lb">Cryptocurrency</span></button>`;
+  if(hasGC) html += `<button class="payopt ${selectedPay&&selectedPay.method==='giftcard'?'on':''}" onclick="pickMethod('giftcard')"><span class="ic">🎁</span><span class="lb">Gift Cards</span></button>`;
+  if(hasPS) html += `<button class="payopt ${selectedPay&&selectedPay.method==='paystack'?'on':''}" onclick="pickMethod('paystack')"><span class="ic">💳</span><span class="lb">Paystack / Card</span></button>`;
+  if(!html) html = '<div class="note" style="grid-column:1/-1">⚠️ No payment methods configured yet — the admin needs to add wallets, gift cards or Paystack keys.</div>';
+  $('payOptions').innerHTML = html;
+  renderPaySub();
+}
+function pickMethod(m){
+  selectedPay = {method:m, sub:null}; renderPayOptions();
+}
+function renderPaySub(){
+  const box = $('paySub');
+  if(!selectedPay) return box.innerHTML = '';
+  if(selectedPay.method==='crypto'){
+    box.innerHTML = `<div class="subopts">${Object.entries(wallets).map(([k,w])=>`<button class="subopt ${selectedPay.sub===k?'on':''}" onclick="selectedPay.sub='${k}';renderPaySub()">${esc(w.name)}</button>`).join('')}</div>`;
+  } else if(selectedPay.method==='giftcard'){
+    box.innerHTML = `<div class="subopts">${Object.entries(giftCards).map(([k,g])=>`<button class="subopt ${selectedPay.sub===k?'on':''}" onclick="selectedPay.sub='${k}';renderPaySub()">🎁 ${esc(g.name)}</button>`).join('')}</div>`;
+  }
+}
+
+function placeOrder(){
+  const c = {name:$('cName').value.trim(), email:$('cEmail').value.trim(), phone:$('cPhone').value.trim(),
+    street:$('cStreet').value.trim(), city:$('cCity').value.trim(), state:$('cState').value.trim(),
+    zip:$('cZip').value.trim(), country:$('cCountry').value.trim()};
+  if(!c.name||!c.email||!c.phone||!c.street||!c.city||!c.state||!c.zip||!c.country) return toast('⚠️ Please fill in ALL delivery fields');
+  if(!/^\S+@\S+\.\S+$/.test(c.email)) return toast('⚠️ Enter a valid email address');
+  if(!selectedPay) return toast('⚠️ Choose a payment method');
+  if(selectedPay.method!=='paystack' && !selectedPay.sub) return toast('⚠️ Choose a ' + (selectedPay.method==='crypto'?'wallet':'gift card type'));
+
+  const t = cartTotals();
+  const items = cart.map(ci=>{ const p=products[ci.id]; return {id:ci.id, name:p.name, price:p.price, qty:ci.qty}; });
+  const order = {customer:c, items, subtotal:t.sub, shippingFee:t.ship, total:t.total,
+    paymentMethod:selectedPay.method,
+    paymentRef: selectedPay.method==='crypto' ? (wallets[selectedPay.sub]?.name||'Crypto') : selectedPay.method==='giftcard' ? (giftCards[selectedPay.sub]?.name||'Gift Card') : 'Paystack',
+    status:'pending', createdAt:Date.now(), trackingNumber:''};
+
+  const ref = db.ref('orders').push(order);
+  pendingOrderKey = ref.key;
+  showStep(2); renderPayUI(order);
+}
+function renderPayUI(order){
+  const ui = $('payUI');
+  const due = fmt(order.total);
+  if(selectedPay.method==='crypto'){
+    const w = wallets[selectedPay.sub];
+    ui.innerHTML = `<h3>💎 Pay with ${esc(w.name)}</h3>
+      <div class="note">Send <b>${due}</b> to the wallet below. Once sent, click "I\'ve Sent It" — we\'ll confirm and issue your tracking number instantly.</div>
+      <div class="walletbox"><div class="wn">${esc(w.name)} · ${esc(w.network)}</div><div class="wa" id="walletAddr">${esc(w.address)}</div>
+      <button class="cpbtn" onclick="navigator.clipboard.writeText('${esc(w.address)}').then(()=>toast('📋 Wallet address copied'))">Copy Address</button></div>
+      <label>Transaction ID (optional)</label><input id="txHash" placeholder="Paste your tx hash if available">
+      <button class="bigbtn" onclick="completeOrder('crypto')">✅ I\'ve Sent the Payment</button>`;
+  } else if(selectedPay.method==='giftcard'){
+    const g = giftCards[selectedPay.sub];
+    ui.innerHTML = `<h3>🎁 Pay with ${esc(g.name)}</h3>
+      <div class="note">${esc(g.instructions||'Enter your card code below.')}<br><b>Amount due: ${due}</b></div>
+      <label>Card Code / PIN *</label><input id="gcCode" placeholder="e.g. XXXX-XXXX-XXXX">
+      <label>Card PIN (if required)</label><input id="gcPin" placeholder="Optional">
+      <button class="bigbtn" onclick="completeOrder('giftcard')">✅ I\'ve Entered My Card</button>`;
+  } else {
+    ui.innerHTML = `<h3>💳 Pay with Paystack</h3>
+      <div class="note">You\'ll be redirected to a secure Paystack popup to pay <b>${due}</b> with your card, bank or USSD.</div>
+      <button class="bigbtn" onclick="payWithPaystack()">🔒 Pay ${due} Now</button>`;
+  }
+}
+function completeOrder(method){
+  let details = {};
+  if(method==='crypto'){
+    const w = wallets[selectedPay.sub];
+    details = {wallet:w.name, address:w.address, txHash:$('txHash').value.trim()};
+    if(!details.txHash && !confirm('No transaction ID entered. Continue anyway?')) return;
+  } else {
+    const g = giftCards[selectedPay.sub];
+    details = {cardType:g.name, code:$('gcCode').value.trim(), pin:$('gcPin').value.trim()};
+    if(!details.code) return toast('⚠️ Enter your gift card code');
+  }
+  const tn = genTN();
+  db.ref('orders/'+pendingOrderKey).update({status:'paid', paidAt:Date.now(), trackingNumber:tn, paymentDetails:details})
+    .then(()=>{
+      // reduce stock
+      cart.forEach(ci=>db.ref('products/'+ci.id+'/stock').transaction(s=>Math.max(0, (s??1) - ci.qty)));
+      cart = []; saveCart();
+      showSuccess(tn);
+    });
+}
+function payWithPaystack(){
+  if(typeof PaystackPop === 'undefined') return toast('⚠️ Paystack script failed to load');
+  if(!settings.paystack.publicKey) return toast('⚠️ Paystack not configured by admin');
+  const order = {total:0}; // fetch from db for accuracy
+  db.ref('orders/'+pendingOrderKey).once('value', s=>{
+    const o = s.val();
+    const handler = PaystackPop.setup({
+      key: settings.paystack.publicKey,
+      email: o.customer.email,
+      amount: Math.round(o.total*100),
+      currency: settings.paystack.currency || 'NGN',
+      ref: 'SH' + Date.now() + Math.floor(Math.random()*999),
+      callback: res => {
+        db.ref('orders/'+pendingOrderKey).update({status:'paid', paidAt:Date.now(), trackingNumber:genTN(), paymentDetails:{reference:res.reference, status:res.status, paystack:true}})
+          .then(()=>{ cart.forEach(ci=>db.ref('products/'+ci.id+'/stock').transaction(s=>Math.max(0,(s??1)-ci.qty))); cart=[]; saveCart(); showSuccess(db.ref('orders/'+pendingOrderKey).key ? '' : '', res.reference); });
+      },
+      onClose: () => toast('Payment window closed — order still pending.')
+    });
+    handler.openIframe();
+  });
+}
+function showSuccess(tn){
+  trackTN = tn;
+  $('successTN').textContent = tn;
+  $('checkoutModal').classList.remove('show');
+  $('successModal').classList.add('show');
+}
+function closeSuccess(){ $('successModal').classList.remove('show'); }
+function copyTN(){ navigator.clipboard.writeText(trackTN).then(()=>toast('📋 Tracking number copied!')); }
+function genTN(){
+  return 'TRK-' + Date.now().toString(36).toUpperCase().slice(-4) + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+}
+
+/* ---------- Flash timer (to midnight) ---------- */
+function startTimer(){
+  function tick(){
+    const now = new Date(), end = new Date(); end.setHours(23,59,59,999);
+    let s = Math.max(0, Math.floor((end-now)/1000));
+    const h = String(Math.floor(s/3600)).padStart(2,'0'), m = String(Math.floor(s%3600/60)).padStart(2,'0'), ss = String(s%60).padStart(2,'0');
+    $('timer').textContent = `${h}:${m}:${ss}`;
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+init();
+</script>
+</body>
+</html>
