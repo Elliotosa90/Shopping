@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Track Order — ShopHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+:root{--p:#ff5c00;--p2:#ff2d78;--a:#ffb800;--ink:#241a2e;--mut:#8a8299;--bg:#f5f3fa;--card:#fff;--r:16px;--grad:linear-gradient(90deg,#ff5c00,#ff2d78)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+button{font-family:inherit;cursor:pointer;border:none}
+input{font-family:inherit;font-size:15px;padding:13px 16px;border:2px solid #e4dfef;border-radius:14px;outline:none;width:100%;background:#fff}
+input:focus{border-color:var(--p)}
+.hidden{display:none!important}
+header{background:#fff;box-shadow:0 2px 14px rgba(36,26,46,.08);position:sticky;top:0;z-index:50}
+.topbar{max-width:960px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:13px 16px}
+.logo{font-weight:900;font-size:25px;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.5px;text-decoration:none}
+.back{background:#f3f0f9;border-radius:12px;padding:9px 16px;font-weight:600;font-size:13.5px;color:var(--ink);text-decoration:none}
+.hero{background:linear-gradient(120deg,#ff5c00,#ff2d78 55%,#7c3aed);color:#fff;padding:44px 16px 56px;text-align:center}
+.hero h1{font-size:clamp(24px,4vw,36px);font-weight:900;text-shadow:0 3px 12px rgba(0,0,0,.25)}
+.hero p{margin-top:8px;opacity:.95;font-size:15px}
+.searchbox{max-width:640px;margin:-26px auto 0;padding:0 16px;position:relative;z-index:5}
+.searchbox .wrap{display:flex;background:#fff;border-radius:18px;padding:6px;box-shadow:0 18px 44px rgba(36,26,46,.18)}
+.searchbox input{border:none;flex:1;font-weight:600}
+.searchbox button{background:var(--grad);color:#fff;font-weight:800;padding:12px 28px;border-radius:13px;font-size:14.5px;white-space:nowrap}
+main{flex:1;max-width:960px;margin:34px auto 60px;padding:0 16px;width:100%}
+/* result card */
+.result{background:var(--card);border-radius:20px;box-shadow:0 8px 30px rgba(36,26,46,.1);overflow:hidden;animation:fade .4s ease}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rhead{background:linear-gradient(120deg,#ff5c00,#ff2d78);color:#fff;padding:22px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.rhead .tn{font-size:21px;font-weight:900;letter-spacing:1px;word-break:break-all}
+.rhead .st{background:rgba(255,255,255,.2);padding:7px 16px;border-radius:24px;font-weight:800;font-size:13px;backdrop-filter:blur(4px)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding:20px 24px;border-bottom:1px solid #f0ecf7}
+.stat b{display:block;font-size:16px;font-weight:800}
+.stat span{color:var(--mut);font-size:12px;font-weight:600}
+.body{padding:22px 24px;display:grid;grid-template-columns:1.3fr 1fr;gap:26px}
+@media(max-width:720px){.body{grid-template-columns:1fr}}
+h3{font-size:15px;font-weight:800;margin-bottom:16px}
+/* timeline */
+.timeline{position:relative;padding-left:26px}
+.timeline::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:3px;background:linear-gradient(180deg,#ff5c00,#ff2d78);border-radius:2px}
+.tl{position:relative;margin-bottom:22px}
+.tl::before{content:'';position:absolute;left:-26px;top:2px;width:15px;height:15px;border-radius:50%;background:#fff;border:3.5px solid var(--p);box-shadow:0 0 0 3px rgba(255,92,0,.18)}
+.tl.done::before{background:var(--grad)}
+.tl.live::before{background:var(--grad);animation:pulse 1.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,92,0,.4)}70%{box-shadow:0 0 0 10px rgba(255,92,0,0)}100%{box-shadow:0 0 0 0 rgba(255,92,0,0)}}
+.tl .ts{font-size:11.5px;color:var(--mut);font-weight:700}
+.tl .tt{font-weight:800;font-size:14.5px;margin:2px 0}
+.tl .td{font-size:13px;color:var(--mut);line-height:1.5}
+.tl .loc{font-size:12px;color:var(--p2);font-weight:700;margin-top:2px}
+.tl .badge{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:12px;margin-left:6px;vertical-align:2px}
+.badge.created{background:#f3e8ff;color:#6b21a8}
+.badge.in_transit{background:#ffedd5;color:#9a3412}
+.badge.out_for_delivery{background:#fce7f3;color:#9d174d}
+.badge.delivered{background:#d1fae5;color:#065f46}
+.awaiting{background:#fff8e1;border:1.5px dashed #ffd977;border-radius:14px;padding:16px;font-size:13.5px;color:#7a5b00;line-height:1.7}
+/* side info */
+.info{display:flex;flex-direction:column;gap:18px}
+.box{background:#faf8fd;border-radius:14px;padding:16px}
+.box h4{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);margin-bottom:8px;font-weight:800}
+.box p{font-size:13.5px;line-height:1.8;word-break:break-word}
+.pay{display:inline-block;background:#fff0f5;color:var(--p2);font-weight:700;font-size:12px;padding:3px 11px;border-radius:14px;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td{padding:7px 0;border-bottom:1px dashed #eee7f8}
+td:last-child{text-align:right;font-weight:700}
+tr:last-child td{border-bottom:none}
+.total td{font-size:14.5px;color:var(--p);font-weight:800}
+.notfound{text-align:center;background:var(--card);border-radius:20px;padding:60px 24px;box-shadow:0 8px 30px rgba(36,26,46,.08)}
+.notfound .big{font-size:52px;margin-bottom:12px}
+.notfound h2{font-size:20px;font-weight:800;margin-bottom:6px}
+.notfound p{color:var(--mut);font-size:14px;margin-bottom:18px}
+.notfound .hint{background:#faf8fd;border-radius:12px;padding:14px;font-size:12.5px;color:var(--mut);line-height:1.8;display:inline-block;text-align:left}
+footer{margin-top:auto;background:#1f0a3a;color:#cfc3e8;padding:26px 16px;text-align:center;font-size:13px}
+footer a{color:var(--a);text-decoration:none;font-weight:600}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:13px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:200;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+@media(max-width:560px){.searchbox .wrap{flex-direction:column;gap:8px}.searchbox button{padding:12px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <a class="logo" href="index.html">🛍️ ShopHub</a>
+    <a class="back" href="index.html">← Back to Shop</a>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>📦 Track Your Order</h1>
+  <p>Enter your tracking number to see live delivery updates</p>
+</div>
+
+<div class="searchbox">
+  <div class="wrap">
+    <input id="tnInput" placeholder="e.g. TRK-AB12-CD34" onkeydown="if(event.key==='Enter')track()">
+    <button onclick="track()">Track Now →</button>
+  </div>
+</div>
+
+<main>
+  <!-- result -->
+  <div id="result" class="hidden"></div>
+</main>
+
+<footer>
+  <p>🛍️ ShopHub — <a href="index.html">Continue shopping</a> · <a href="admin.html">Admin</a></p>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   🔥 FIREBASE CONFIG — REPLACE WITH YOUR PROJECT'S CONFIG
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const db = firebase.initializeApp(firebaseConfig).database();
+let settings = {currency:'$'};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => settings.currency + ' ' + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const tdate = ts => ts ? new Date(ts).toLocaleString() : '';
+const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2800); };
+const ST = {created:'Created', in_transit:'In Transit', out_for_delivery:'Out for Delivery', delivered:'Delivered'};
+
+db.ref('settings').on('value', s => { settings = Object.assign(settings, s.val()||{}); });
+
+/* ---------- Lookup ---------- */
+function track(){
+  const tn = $('tnInput').value.trim().toUpperCase();
+  if(!tn) return toast('⚠️ Enter your tracking number');
+  if(!/^TRK-/.test(tn)) return toast('⚠️ Tracking numbers start with TRK-');
+  lookup(tn);
+}
+function lookup(tn){
+  const out = $('result');
+  out.classList.remove('hidden');
+  out.innerHTML = '<div class="notfound" style="box-shadow:none"><div class="big">🔍</div><h2>Searching…</h2><p>Checking Firebase for your shipment</p></div>';
+  db.ref('shipments/'+tn).once('value', s => {
+    const ship = s.val();
+    if(!ship){
+      // maybe order exists but no shipment created yet
+      db.ref('orders').orderByChild('trackingNumber').equalTo(tn).once('value', os => {
+        let found = null;
+        os.forEach(c => { found = {key:c.key, ...c.val()}; return true; });
+        if(found) renderOrderOnly(found);
+        else renderNotFound(tn);
+      });
+      return;
+    }
+    db.ref('orders/'+ship.orderId).once('value', os => {
+      const order = os.val() || {};
+      renderShipment(ship, order);
+    });
+  });
+}
+
+/* ---------- Render: full shipment ---------- */
+function renderShipment(ship, order){
+  const cust = order.customer||{};
+  const items = (order.items||[]).map(i=>`<tr><td>${esc(i.name)} ×${i.qty}</td><td>${fmt(i.price*i.qty)}</td></tr>`).join('');
+  const tl = ship.timeline || (ship.createdAt ? [{status:ship.status, location:ship.location, note:ship.note, at:ship.createdAt}] : []);
+  const steps = tl.slice().reverse(); // newest last visually? no — oldest first
+  steps.reverse();
+  const lastIdx = steps.length-1;
+
+  const timelineHTML = steps.length ? steps.map((st,i)=>{
+    const cls = i===lastIdx ? (st.status==='delivered' ? 'done' : 'live') : 'done';
+    return `<div class="tl ${cls}">
+      <div class="ts">${tdate(st.at)}</div>
+      <div class="tt">${esc(ST[st.status]||st.status)} <span class="badge ${st.status}">${esc(ST[st.status]||st.status)}</span></div>
+      ${st.location? `<div class="loc">📍 ${esc(st.location)}</div>`:''}
+      ${st.note? `<div class="td">${esc(st.note)}</div>`:''}
+    </div>`;
+  }).join('') : `<div class="awaiting">🕒 Shipment created — location updates will appear here as the courier moves your package.</div>`;
+
+  out.innerHTML = `
+    <div class="result">
+      <div class="rhead">
+        <div>
+          <div style="font-size:12px;opacity:.85;font-weight:700">TRACKING NUMBER</div>
+          <div class="tn">${esc(ship.trackingNumber)}</div>
+        </div>
+        <span class="st">${esc(ST[ship.status]||ship.status)}</span>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>Carrier</span><b>${esc(ship.carrier||'—')}</b></div>
+        <div class="stat"><span>Order Ref</span><b>${esc((ship.orderId||'').slice(-6).toUpperCase()||'—')}</b></div>
+        <div class="stat"><span>Est. Destination</span><b>${esc(cust.city||'—')}</b></div>
+        <div class="stat"><span>Last Updated</span><b style="font-size:13px">${tdate(ship.updatedAt||ship.createdAt)}</b></div>
+      </div>
+      <div class="body">
+        <div>
+          <h3>🚚 Delivery Timeline</h3>
+          ${timelineHTML}
+        </div>
+        <div class="info">
+          <div class="box">
+            <h4>📍 Delivery Address</h4>
+            <p><b>${esc(cust.name||'—')}</b><br>${esc(cust.street||'')}, ${esc(cust.city||'')} ${esc(cust.state||'')} ${esc(cust.zip||'')}<br>${esc(cust.country||'')}<br>📞 ${esc(cust.phone||'—')}<br>📧 ${esc(cust.email||'—')}</p>
+          </div>
+          <div class="box">
+            <h4>🧾 Order Summary</h4>
+            <table>${items||'<tr><td>—</td><td></td></tr>'}
+              <tr><td>Shipping</td><td>${fmt(order.shippingFee)}</td></tr>
+              <tr class="total"><td>Total</td><td>${fmt(order.total)}</td></tr>
+            </table>
+            <span class="pay">💳 ${esc(order.paymentMethod||'')} · ${esc(order.paymentRef||'')}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  out.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ---------- Render: paid order, shipment not created yet ---------- */
+function renderOrderOnly(order){
+  out.innerHTML = `
+    <div class="result">
+      <div class="rhead">
+        <div>
+          <div style="font-size:12px;opacity:.85;font-weight:700">TRACKING NUMBER</div>
+          <div class="tn">${esc(order.trackingNumber)}</div>
+        </div>
+        <span class="st">PAID · AWAITING SHIPMENT</span>
+      </div>
+      <div class="body" style="grid-template-columns:1fr">
+        <div class="awaiting">
+          ✅ <b>Payment received!</b> Your order has been confirmed and the seller is preparing your package.<br>
+          🚚 A courier pickup will be created soon — your tracking timeline will appear here the moment your shipment is registered.<br>
+          <span style="opacity:.8">Keep this page saved and check back later, or contact us with your tracking number.</span>
+        </div>
+      </div>
+    </div>`;
+  out.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ---------- Not found ---------- */
+function renderNotFound(tn){
+  out.innerHTML = `
+    <div class="notfound">
+      <div class="big">🔍</div>
+      <h2>Tracking number not found</h2>
+      <p>We couldn't find "<b>${esc(tn)}</b>" in our system.</p>
+      <div class="hint">
+        💡 Possible reasons:<br>
+        · Double-check the number (it starts with <b>TRK-</b>)<br>
+        · Shipment hasn't been created by the seller yet<br>
+        · You're looking at a demo store — try placing an order first<br><br>
+        <button onclick="location.href='index.html'" style="background:var(--grad);color:#fff;font-weight:700;padding:10px 22px;border-radius:12px;font-size:13px;width:100%">🛒 Back to Shopping</button>
+      </div>
+    </div>`;
+  out.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ---------- Auto-track from URL (?tn=) ---------- */
+(function(){
+  const p = new URLSearchParams(location.search);
+  const tn = p.get('tn');
+  if(tn){
+    $('tnInput').value = tn.toUpperCase();
+    lookup(tn.toUpperCase());
+  }
+})();
+</script>
+</body>
+</html>
