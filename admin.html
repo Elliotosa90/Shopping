@@ -532,7 +532,7 @@ function changePass(){
 }
 
 /* ---------- Modals + render all ---------- */
-function closeModal(id){ $('id' in {}) ; $('id').classList.remove('show'); }
+function closeModal(id){ $(id).classList.remove('show'); }
 function renderAll(){
   if(sessionStorage.getItem('sh_admin')!=='1') return;
   renderOverview(); renderProducts(); renderOrders(); renderShipments(); renderPayments(); renderSettings();
