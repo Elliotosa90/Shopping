@@ -284,6 +284,7 @@ label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin:11px 
    🔥 FIREBASE CONFIG — REPLACE WITH YOUR PROJECT'S CONFIG
    (MUST be identical to the one in index.html and track.html)
    ============================================================ */
+
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -293,6 +294,7 @@ const firebaseConfig = {
   messagingSenderId: "YOUR_SENDER_ID",
   appId: "YOUR_APP_ID"
 };
+
 
 const db = firebase.initializeApp(firebaseConfig).database();
 let settings = {contact:{}, shippingFee:0, currency:'$', paystack:{}, adminPass:'admin123'};
